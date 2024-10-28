@@ -1,18 +1,14 @@
-const checkLength = (string = '', maxLength = 1) => (string.length <= maxLength);
-
-checkLength('Проверяемая строка', 20);
-checkLength('Проверяемая строка', 18);
-checkLength('Проверяемая строка', 10);
-
-function checkPalindrom(string = '') {
-  const normalSrting = string.replaceAll(' ', '').toUpperCase();
-  let reversedString = '';
-
-  for (let i = normalSrting.length - 1; i >= 0; i--) {
-    reversedString += normalSrting[i];
+function isMeetingTime (startOfDay, endOfDayy, meetingStart, duration) {
+  function timeToMinutes (timeStr) {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
   }
-  return normalSrting === reversedString;
+  const startDayMinutes = timeToMinutes(startOfDay);
+  const endDayMinutes = timeToMinutes(endOfDayy);
+  const meetingStartMinutes = timeToMinutes(meetingStart);
+  const meetingEndMinutes = meetingStartMinutes + duration;
+
+  return startDayMinutes <= meetingStartMinutes && endDayMinutes >= meetingEndMinutes;
 }
-checkPalindrom('Топот');
-checkPalindrom('ДовОд');
-checkPalindrom('кекс');
+
+isMeetingTime();
