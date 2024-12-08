@@ -1,3 +1,3 @@
 import { createPhotoDescription } from './photo.js';
-
-createPhotoDescription();
+import { renderPictures } from '.miniatureDrawing.js';
+renderPictures(createPhotoDescription());
