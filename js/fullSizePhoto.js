@@ -62,6 +62,8 @@ document.addEventListener('keydown', (evt) => {
   }
 });
 
+
 commentsLoader.addEventListener('click', renderComments);
+
 
 export { renderFullSizePhoto };
