@@ -7,15 +7,15 @@ const socialCaption = bigPicturesConteiner.querySelector('.social__caption');
 const commentCountBlock = bigPicturesConteiner.querySelector('.social__count-comment');
 const commentsLoader = bigPicturesConteiner.querySelector('.comments-loader');
 const closeButton = bigPicturesConteiner.querySelector('.big-picture__button');
+const COMMENTS_PER_LOAD = 5;
 
-const renderFullSizePhoto = ({ url, likes, comments, description }) => {
-  bigPicturesImage.src = url;
-  likeCount.textContent = likes;
-  commentsCount.textContent = comments.length;
-  socialCaption.textContent = description;
+let commentsData = [];
+let currentCommentsShown = 0;
 
-  socialComments.innerHTML = '';
-  comments.forEach (({ avatar, message, name }) => {
+const renderComments = () => {
+  const nextComments = commentsData.slice(currentCommentsShown, currentCommentsShown + COMMENTS_PER_LOAD);
+
+  nextComments.forEach(({ avatar, message, name }) => {
     const commentElement = document.createElement('li');
     commentElement.classList.add('.social__comment');
     commentElement.innerHTML = `
@@ -23,6 +23,26 @@ const renderFullSizePhoto = ({ url, likes, comments, description }) => {
       <p class="social__text">${message}</p>`;
     socialComments.appendChild(commentElement);
   });
+
+  currentCommentsShown += nextComments.length;
+  commentCountBlock.textContent = `${currentCommentsShown} из ${commentsData.length} комментарев`;
+
+  if (currentCommentsShown >= commentsData.length) {
+    commentsLoader.classList.add('hidden');
+  }
+};
+
+const renderFullSizePhoto = ({ url, likes, comments, description }) => {
+  bigPicturesImage.src = url;
+  likeCount.textContent = likes;
+  commentsCount.textContent = comments.length;
+  socialCaption.textContent = description;
+
+  commentsData = comments;
+  currentCommentsShown = 0;
+
+  socialComments.innerHTML = '';
+  renderComments();
 
   commentCountBlock.classList.add('hidden');
   commentsLoader.classList.add('hidden');
@@ -41,5 +61,7 @@ document.addEventListener('keydown', (evt) => {
     closeFullSizePhoto();
   }
 });
+
+commentsLoader.addEventListener('click', renderComments);
 
 export { renderFullSizePhoto };
