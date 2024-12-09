@@ -1,8 +1,8 @@
-export function createRundomNumbers (min, max) {
+function createRundomNumbers (min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-export function createRandomMessages() {
+function createRandomMessages() {
   const MESSAGES = [
     'Всё отлично!',
     'В целом всё неплохо. Но не всё.',
@@ -14,6 +14,10 @@ export function createRandomMessages() {
   return MESSAGES[createRundomNumbers(0, MESSAGES.length - 1)];
 }
 
-export function createRandomAvatar() {
+function createRandomAvatar() {
   return `img/avatar-${createRundomNumbers(1, 6)}.svg`;
 }
+
+const isEscapeKey = (evt) => evt.key === 'Escape';
+
+export {createRandomAvatar, createRandomMessages, createRundomNumbers, isEscapeKey};
