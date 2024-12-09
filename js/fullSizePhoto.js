@@ -1,3 +1,5 @@
+import { isEscapeKey } from './utils';
+
 const bigPicturesConteiner = document.querySelector('.big-pictures');
 const bigPicturesImage = bigPicturesConteiner.querySelector('.big-picture__img img');
 const likeCount = bigPicturesConteiner.querySelector('.likes-count');
@@ -55,12 +57,13 @@ const closeFullSizePhoto = () => {
   document.body.classList.add('modal-open');
 };
 
-closeButton.addEventListener('click', closeFullSizePhoto);
-document.addEventListener('keydown', (evt) => {
-  if (evt.key === 'Escape') {
+closeButton.addEventListener('click', onDocumentKeydown);
+function onDocumentKeydown(evt) {
+  if (isEscapeKey) {
+    evt.preventDefault();
     closeFullSizePhoto();
   }
-});
+}
 
 
 commentsLoader.addEventListener('click', renderComments);
