@@ -1,14 +1,16 @@
 root: true
 
 parserOptions:
-  ecmaVersion: 2022
+  ecmaVersion: 2018
   sourceType: "module"
 
 env:
-  es2022: true
+  es2017: true
   browser: true
 
 globals:
+  _: readonly
+  L: readonly
   noUiSlider: readonly
   Pristine: readonly
 

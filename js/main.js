@@ -1,6 +1,16 @@
-import { createPhotoDescription } from './photo.js';
-import { renderPictures } from '.miniatureDrawing.js';
-import { renderFullSizePhoto } from './fullSizePhoto.js';
+import { loadData } from './api.js';
+import { showUploadErrorMessage } from './util.js';
+import { initFilters } from './filters.js';
+import { setUserFormSubmit } from './form.js';
 
-renderPictures(createPhotoDescription());
-renderFullSizePhoto();
+loadData()
+  .then((data) => {
+    initFilters(data);
+  })
+  .catch(
+    (err) => {
+      showUploadErrorMessage(err.message);
+    }
+  );
+
+setUserFormSubmit();
