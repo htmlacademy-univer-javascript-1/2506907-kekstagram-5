@@ -1,12 +1,18 @@
-import { isEscapeKey} from './util.js';
+import { isEscapeKey } from './util.js';
 import { resetScale, updateScaleStyles } from './picture-scale.js';
 import { hideSlider } from './picture-effects.js';
 import { sendData } from './api.js';
 
 const MAX_HASHTAG_LENGTH = 5;
-const COMMENTS_MAX_LENGHT = 140;
+const COMMENTS_MAX_LENGTH = 140;
 const ONE_VALID_HASHTAG = /^#[a-zа-яё0-9]{1,19}$/i;
-const MULTIPLE_VALID_HASHTAGS = /(?:^|\s)(#[a-zа-яё0-9]{1,19})(?=\s|$)/gi;
+
+const ValidationErrorTexts = {
+  MAX_HASHTAGS_COUNT: 'Нельзя указывать больше 5 хештегов',
+  UNIQ_HASHTAGS: 'Хештеги не должны повторяться',
+  INVALID_HASHTAG: 'Невалидный формат хештега',
+  MAX_COMMENT_LENGTH: 'Длина комментария должна быть меньше 140 символов',
+};
 
 const body = document.querySelector('body');
 const imgUploadInput = body.querySelector('.img-upload__input');
@@ -25,13 +31,6 @@ const errorMessage = document.querySelector('.error');
 const successMessage = document.querySelector('.success');
 const successButton = successMessage.querySelector('.success__button');
 const errorButton = errorMessage.querySelector('.error__button');
-
-const ValidationErrorTexts = {
-  MAX_HASHTAGS_COUNT : 'Нельзя указывать больше 5 хештегов',
-  UNIQ_HASHTAGS : 'Хештеги не должны повторяться',
-  INVALID_HASHTAG : 'Невалидный формат хештега',
-  MAX_COMMENT_LENGTH : 'Длина комментария должна быть меньше 140 символов'
-};
 
 const isFocused = (element) => document.activeElement === element;
 
@@ -52,7 +51,10 @@ function openUploadOverlay() {
 function closeUploadOverlay() {
   imgUploadOverlay.classList.add('hidden');
   body.classList.remove('modal-open');
+  
+  // Сбрасываем форму и валидатор
   imgUploadForm.reset();
+  pristineValidator.reset(); // Сброс состояния валидатора
   resetScale();
   updateScaleStyles();
   hideSlider();
@@ -80,7 +82,7 @@ const onMessageKeydown = (messageType) => (evt) => {
   }
 };
 
-function openMessage (messageType) {
+function openMessage(messageType) {
   messageType.classList.remove('hidden');
   body.classList.add('modal-open');
 
@@ -88,12 +90,11 @@ function openMessage (messageType) {
   document.removeEventListener('keydown', onFormKeydown);
 }
 
-function closeMessage (messageType) {
+function closeMessage(messageType) {
   messageType.classList.add('hidden');
   if (messageType === errorMessage) {
     imgUploadOverlay.classList.remove('hidden');
-  }
-  else {
+  } else {
     body.classList.remove('modal-open');
   }
 
@@ -113,64 +114,82 @@ errorButton.addEventListener('click', () => {
 const pristineValidator = new Pristine(
   imgUploadForm,
   {
-    classTo : 'img-upload__field-wrapper',
-    errorTextParent : 'img-upload__field-wrapper',
-    errorTextClass : 'img-upload__field-wrapper__error'
-  });
+    classTo: 'img-upload__field-wrapper',
+    errorTextParent: 'img-upload__field-wrapper',
+    errorTextClass: 'img-upload__field-wrapper__error',
+  }
+);
 
-const validateHashtagsLength = (hashtagString) => hashtagString.split(' ').length <= MAX_HASHTAG_LENGTH;
+const validateHashtagsLength = (hashtagString) => {
+  if (!hashtagString.trim()) {
+    return true; // Пустая строка валидна
+  }
+  const hashtags = hashtagString.trim().split(/\s+/);
+  return hashtags.length <= MAX_HASHTAG_LENGTH;
+};
 
-const validateHashtagUniqness = (hashtagString) => {
-  const hashtags = hashtagString.toLowerCase().split(' ');
+const validateHashtagUniqueness = (hashtagString) => {
+  if (!hashtagString.trim()) {
+    return true; // Пустая строка валидна
+  }
+  const hashtags = hashtagString.trim().toLowerCase().split(/\s+/);
   return hashtags.length === new Set(hashtags).size;
 };
 
 const validateHashtagFormat = (hashtagString) => {
-  if (hashtagString === '') {
-    return true;
+  if (!hashtagString.trim()) {
+    return true; // Пустая строка валидна
   }
-
-  if (hashtagString === '#') {
-    return false;
-  }
-  const hashtagCount = hashtagString.split('#').length - 1;
-
-  if (hashtagCount === 1) {
-    return ONE_VALID_HASHTAG.test(hashtagString);
-  }
-
-  return MULTIPLE_VALID_HASHTAGS.test(hashtagString);
+  const hashtags = hashtagString.trim().split(/\s+/);
+  return hashtags.every((tag) => ONE_VALID_HASHTAG.test(tag));
 };
 
-const validateComments = (commentsString) => commentsString.length <= COMMENTS_MAX_LENGHT;
+const validateComments = (commentsString) => commentsString.trim().length <= COMMENTS_MAX_LENGTH;
 
-pristineValidator.addValidator(textHashtagsField, validateHashtagsLength, ValidationErrorTexts.MAX_HASHTAGS_COUNT);
-pristineValidator.addValidator(textHashtagsField, validateHashtagUniqness, ValidationErrorTexts.UNIQ_HASHTAGS);
-pristineValidator.addValidator(textHashtagsField, validateHashtagFormat, ValidationErrorTexts.INVALID_HASHTAG);
-pristineValidator.addValidator(textDescriptionField, validateComments, ValidationErrorTexts.MAX_COMMENT_LENGTH);
+pristineValidator.addValidator(
+  textHashtagsField,
+  validateHashtagsLength,
+  ValidationErrorTexts.MAX_HASHTAGS_COUNT
+);
 
+pristineValidator.addValidator(
+  textHashtagsField,
+  validateHashtagUniqueness,
+  ValidationErrorTexts.UNIQ_HASHTAGS
+);
+
+pristineValidator.addValidator(
+  textHashtagsField,
+  validateHashtagFormat,
+  ValidationErrorTexts.INVALID_HASHTAG
+);
+
+pristineValidator.addValidator(
+  textDescriptionField,
+  validateComments,
+  ValidationErrorTexts.MAX_COMMENT_LENGTH
+);
 
 const setUserFormSubmit = () => {
   imgUploadForm.addEventListener('submit', (evt) => {
     evt.preventDefault();
     const isValid = pristineValidator.validate();
     if (isValid) {
-      submitImgUploadButton.disabled = 'true';
+      submitImgUploadButton.disabled = true;
       sendData(new FormData(evt.target))
-        .then(
-          () => {
-            closeUploadOverlay();
-            openMessage(successMessage);
-          }
-        )
-        .catch(
-          () => {
-            imgUploadOverlay.classList.add('hidden');
-            openMessage(errorMessage);
-          }
-        );
+        .then(() => {
+          closeUploadOverlay();
+          openMessage(successMessage);
+        })
+        .catch(() => {
+          imgUploadOverlay.classList.add('hidden');
+          openMessage(errorMessage);
+        })
+        .finally(() => {
+          submitImgUploadButton.disabled = false;
+        });
     }
   });
 };
 
-export {setUserFormSubmit};
+export { setUserFormSubmit };

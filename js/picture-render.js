@@ -1,5 +1,7 @@
 import { isEscapeKey} from './util.js';
 
+const COMMENTS_ADD_STEP = 5;
+
 const body = document.querySelector('body');
 
 const bigPicture = body.querySelector('.big-picture');
@@ -13,8 +15,6 @@ const commentsCurrentCount = bigPicture.querySelector('.comments-current-count')
 
 const likesCount = bigPicture.querySelector('.likes-count');
 const socialCaption = bigPicture.querySelector('.social__caption');
-
-const COMMENTS_ADD_STEP = 5;
 
 let pictureByIdComments;
 
