@@ -1,8 +1,9 @@
 import { openBigPicturePopup } from './picture-render.js';
 
+const PICTURE_SELECTOR = '.picture';
+
 const thumbnailsContainer = document.querySelector('.pictures');
 let pictures = null;
-const PICTURE_SELECTOR = '.picture';
 
 const getPictureTemplate = ({id, url, likes, comments}) => `<a href="#" data-id = ${id} class="picture">
   <img class="picture__img" src="${url}" width="182" height="182" alt="Случайная фотография">
